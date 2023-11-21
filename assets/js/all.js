@@ -1,6 +1,6 @@
 import errorImg from "../images/no_found.png";
 let data = [];
-
+// const chart = document.querySelector(".chart");
 const cardList = document.querySelector(".card-list");
 const filterArea = document.querySelector(".filter-area");
 const filterData = document.querySelector(".filter-data");
@@ -16,12 +16,14 @@ const addBtn = document.querySelector("#addBtn");
 function init() {
   axios
     .get(
-      "https://raw.githubusercontent.com/hexschool/js-training/main/travelApi.json"
+      "https://raw.githubusercontent.com/hexschool/js-training/main/travelAPI-lv1.json"
     )
     .then(function (response) {
       // console.log(response);
-      data = response.data.data;
+      data = response.data;
+      // console.log(data)
       console.log(data.length);
+      c3Data();
       render();
     });
 }
@@ -30,19 +32,21 @@ init();
 //渲染資料
 function render() {
   let str = "";
+  // let str2 = "";
   let count = 0;
   data.forEach(function (item, index) {
     let formattedPrice = item.price.toLocaleString();
     str += `
-      <div class="card">
+    <div class="col">
+      <div class="card h-100">
       <div class="card-section">
         <span class="tag bg-secondary text-white">${item.area}</span>
         <img
           src="${item.imgUrl}"
-          class="card-img-top" alt="${item.area}">
+          class="card-img-top img-fulid" alt="${item.area}"style="max-height:500px;height:233px">
         <span class="tag2 bg-primary text-white">${item.rate}</span>
       </div>
-      <div class="card-body pb-14-cb h-100">
+      <div class="card-body pb-14-cb">
         <h5 class="card-title fs-3 border-2-bottom pb-1 text-primary fw-med mb-0">${item.name}</h5>
         <p class="card-text pt-4 pb-22 text-light">${item.description}</p>
       </div>
@@ -59,6 +63,7 @@ function render() {
           <p class="fs-2 font-Roboto fw-med">$${formattedPrice}</p>
         </li>
       </ul>
+    </div>
     </div>
       `;
     count += 1;
@@ -78,15 +83,16 @@ filterArea.addEventListener("change", function (e) {
     let formattedPrice = item.price.toLocaleString();
     if (e.target.value == item.area || e.target.value == "全部") {
       str += `
-      <div class="card">
+    <div class="col">
+      <div class="card h-100">
       <div class="card-section">
         <span class="tag bg-secondary text-white">${item.area}</span>
         <img
           src="${item.imgUrl}"
-          class="card-img-top" alt="${item.area}">
+          class="card-img-top img-fulid" alt="${item.area}" style="max-height:500px;height:233px">
         <span class="tag2 bg-primary text-white">${item.rate}</span>
       </div>
-      <div class="card-body pb-14-cb h-100">
+      <div class="card-body pb-14-cb">
         <h5 class="card-title fs-3 border-2-bottom pb-1 text-primary fw-med mb-0">${item.name}</h5>
         <p class="card-text pt-4 pb-22 text-light">${item.description}</p>
       </div>
@@ -104,6 +110,7 @@ filterArea.addEventListener("change", function (e) {
         </li>
       </ul>
     </div>
+    </div>
             `;
       count += 1;
     }
@@ -119,6 +126,49 @@ function isValidUrl(url) {
   } catch (error) {
     return false;
   }
+}
+
+function c3Data() {
+  //先從資料建立物件資料
+  let areaAry =[];
+  let obj2 ={};
+  data.forEach(item=>{
+    if(obj2[item.area] === undefined){
+      obj2[item.area] =1;
+    }else{
+      obj2[item.area] +=1;
+    }
+  })
+  //物件資料轉成陣列資料格式
+  areaAry = Object.keys(obj2);
+  // console.log(areaAry);
+
+  let newData =[];
+  areaAry.forEach(function(item,index){
+    let arry = [];
+    arry.push(item);
+    arry.push(obj2[item]);
+    newData.push(arry);
+  })
+  // console.log(newData);
+  renderC3(newData);
+}
+
+function renderC3(newData){
+  var chart = c3.generate({
+    data: {
+      colors: {
+        台北: "#26C0C7",
+        台中: "#5151D3",
+        高雄: "#E68618",
+      },
+      columns: newData,
+      type: "donut",
+    },
+    donut: {
+      title: "套票地區比重",
+    },
+  });
 }
 //新增資料
 function addData() {
@@ -159,6 +209,7 @@ function addData() {
     } else {
       obj.imgUrl = inputUrl.value;
     }
+    c3Data();
     render();
     inputName.value = "";
     inputUrl.value = "";
